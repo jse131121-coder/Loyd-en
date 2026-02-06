@@ -5,31 +5,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Roleplay Chat</title>
 <style>
-body{font-family:Arial;margin:0;background:#e5ddd5}
-.phone{
- max-width:420px;
- margin:auto;
- background:white;
- height:100vh;
- display:flex;
- flex-direction:column;
- border:1px solid #ccc;
-}
-.notice{background:#f3f3f3;padding:10px;text-align:center;font-weight:bold}
-.header{padding:10px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;border-bottom:1px solid #ddd}
-.header button{padding:6px 12px;border:none;border-radius:20px;cursor:pointer}
-.chat{flex:1;padding:15px;overflow-y:auto;background:#efeae2}
-.message{display:flex;margin-bottom:12px}
+body{font-family:Arial;margin:0;background:#e5ddd5;font-size:13px}
+.phone{max-width:420px;margin:auto;background:white;height:100vh;display:flex;flex-direction:column;border:1px solid #ccc}
+.notice{background:#f3f3f3;padding:8px;text-align:center;font-weight:bold;font-size:12px}
+.header{padding:8px;display:flex;gap:6px;flex-wrap:wrap;justify-content:center;border-bottom:1px solid #ddd}
+.header button{padding:5px 10px;border:none;border-radius:20px;cursor:pointer;font-size:12px}
+.chat{flex:1;padding:12px;overflow-y:auto;background:#efeae2}
+.message{display:flex;margin-bottom:10px}
 .message.left{justify-content:flex-start}
 .message.right{justify-content:flex-end}
-.bubble{max-width:65%;padding:10px 14px;border-radius:16px}
+.msgWrap{display:flex;flex-direction:column}
+.nameRow{font-size:11px;margin-bottom:3px;display:flex;align-items:center;gap:5px}
+.nameRow img{width:26px;height:26px;border-radius:50%}
+.bubble{max-width:65%;padding:8px 12px;border-radius:14px;font-size:13px}
 .left .bubble{background:white}
 .right .bubble{background:#8e1c1c;color:white}
-.profile{display:flex;align-items:center;margin-right:6px;font-size:12px}
-.profile img{width:32px;height:32px;border-radius:50%;margin-right:5px}
-.inputBox{display:flex;border-top:1px solid #ddd;padding:10px}
-.inputBox input{flex:1;padding:8px}
-.settings{position:fixed;right:10px;top:10px;background:white;padding:12px;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.1);display:none}
+.inputBox{display:flex;border-top:1px solid #ddd;padding:8px}
+.inputBox input{flex:1;padding:6px;font-size:13px}
+.settings{position:fixed;right:10px;top:10px;background:white;padding:12px;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.1);display:none;font-size:12px}
 .dark{background:#111;color:white}
 .dark .chat{background:#222}
 .dark .left .bubble{background:#333;color:white}
@@ -58,9 +51,9 @@ body{font-family:Arial;margin:0;background:#e5ddd5}
 </div>
 
 <div class="settings" id="settings">
-  <h4>프로필 설정</h4>
+  <h4>프로필 설정 (현재 시점 사용자)</h4>
   이름: <input id="nameInput"><br><br>
-  프사 URL: <input id="imgInput"><br><br>
+  프사 업로드: <input type="file" id="imgInput"><br><br>
   <button onclick="saveProfile()">저장</button>
   <hr>
   <h4>공지 변경 (관리자만)</h4>
@@ -76,13 +69,12 @@ body{font-family:Arial;margin:0;background:#e5ddd5}
 let currentUser = localStorage.getItem('currentUser') || 'SEORIN';
 const adminUser = 'SEORIN';
 let messages = JSON.parse(localStorage.getItem('messages') || '[]');
-
-const users={
- SEORIN:{img:'https://i.pravatar.cc/40?img=1',badge:'⭐'},
- HARI:{img:'https://i.pravatar.cc/40?img=2',badge:'💎'},
- ROSSY:{img:'https://i.pravatar.cc/40?img=3',badge:'✔'},
- DANA:{img:'https://i.pravatar.cc/40?img=4',badge:'🔥'}
-};
+let users = JSON.parse(localStorage.getItem('users') || `{
+ "SEORIN":{"img":"https://i.pravatar.cc/40?img=1","badge":"🩰","name":"SEORIN"},
+ "HARI":{"img":"https://i.pravatar.cc/40?img=2","badge":"🥨","name":"HARI"},
+ "ROSSY":{"img":"https://i.pravatar.cc/40?img=3","badge":"🔖","name":"ROSSY"},
+ "DANA":{"img":"https://i.pravatar.cc/40?img=4","badge":"🌀","name":"DANA"}
+}`);
 
 function renderChat(){
  const chat=document.getElementById('chat');
@@ -94,11 +86,13 @@ function renderChat(){
 
   if(side==='left'){
     wrap.innerHTML=`
-      <div class='profile'>
-        <img src='${users[m.sender].img}'>
-        <div>${m.sender} ${users[m.sender].badge}</div>
-      </div>
-      <div class='bubble'>${m.text}</div>`;
+      <div class='msgWrap'>
+        <div class='nameRow'>
+          <img src='${users[m.sender].img}'>
+          <span>${users[m.sender].name} ${users[m.sender].badge}</span>
+        </div>
+        <div class='bubble'>${m.text}</div>
+      </div>`;
   }else{
     wrap.innerHTML=`<div class='bubble'>${m.text}</div>`;
   }
@@ -130,10 +124,20 @@ function toggleSettings(){
 
 function saveProfile(){
  const name=document.getElementById('nameInput').value;
- const img=document.getElementById('imgInput').value;
- if(img){ users[currentUser].img=img; }
- alert('프로필 저장됨');
- renderChat();
+ const file=document.getElementById('imgInput').files[0];
+ if(name) users[currentUser].name=name;
+ if(file){
+  const reader=new FileReader();
+  reader.onload=function(e){
+    users[currentUser].img=e.target.result;
+    localStorage.setItem('users',JSON.stringify(users));
+    renderChat();
+  };
+  reader.readAsDataURL(file);
+ }else{
+  localStorage.setItem('users',JSON.stringify(users));
+  renderChat();
+ }
 }
 
 function changeNotice(){
