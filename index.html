@@ -6,13 +6,14 @@
 <title>LOYD</title>
 
 <style>
+*{box-sizing:border-box}
 body{
  margin:0;
  background:#000;
- font-family:-apple-system,BlinkMacSystemFont;
- color:#fff;
  display:flex;
  justify-content:center;
+ font-family:-apple-system,BlinkMacSystemFont;
+ color:#fff;
 }
 
 .phone{
@@ -21,49 +22,69 @@ body{
  background:#0b0b0b;
  position:relative;
  overflow:hidden;
+ border-radius:40px;
 }
 
 .header{
- padding:14px;
- font-weight:700;
+ display:flex;
+ justify-content:space-between;
+ padding:16px;
  font-size:20px;
+ font-weight:700;
+}
+
+.storyRow{
+ display:flex;
+ gap:14px;
+ overflow-x:auto;
+ padding:10px 14px;
 }
 
 .story{
- display:flex;
- overflow-x:auto;
- padding:10px;
- gap:12px;
-}
-
-.story div{
  text-align:center;
- font-size:12px;
+ font-size:11px;
 }
 
 .story img{
- width:60px;
- height:60px;
+ width:64px;
+ height:64px;
  border-radius:50%;
- border:2px solid #ff3b82;
+ padding:2px;
+ background:linear-gradient(45deg,#ff2e88,#ff7a00);
 }
 
 .feed{
- height:600px;
+ height:610px;
  overflow:auto;
- padding-bottom:100px;
 }
 
-.post{
+.card{
+ background:#151515;
+ margin:14px;
+ border-radius:20px;
  padding:14px;
- border-bottom:1px solid #222;
+ animation:fade .3s;
+}
+@keyframes fade{from{opacity:0;transform:translateY(20px)}}
+
+.avatar{width:40px;height:40px;border-radius:50%}
+.cardTop{display:flex;align-items:center;gap:10px}
+
+.follow{
+ margin-left:auto;
+ font-size:12px;
+ background:#ff2e88;
+ padding:4px 10px;
+ border-radius:10px;
 }
 
-.post img{
+.card img{
  width:100%;
- border-radius:12px;
- margin-top:8px;
+ border-radius:14px;
+ margin-top:10px;
 }
+
+.actions{display:flex;gap:20px;margin-top:10px;color:#bbb}
 
 .bottom{
  position:absolute;
@@ -72,43 +93,39 @@ body{
  display:flex;
  justify-content:space-around;
  background:#111;
- padding:12px;
+ padding:12px 0;
 }
 
-button{
- background:none;
- border:none;
- color:white;
- font-size:14px;
-}
-
-.writeBtn{
+.fab{
  position:absolute;
  right:20px;
  bottom:90px;
- background:#ff3b82;
- width:56px;
- height:56px;
+ width:58px;
+ height:58px;
  border-radius:50%;
- font-size:26px;
+ background:#ff2e88;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ font-size:28px;
 }
 
-.modal{
+.panel{
  position:absolute;
- top:0;
+ bottom:-100%;
  left:0;
  width:100%;
- height:100%;
- background:#000;
- display:none;
- flex-direction:column;
+ height:70%;
+ background:#111;
+ border-radius:20px 20px 0 0;
  padding:20px;
+ transition:.3s;
+ overflow:auto;
 }
-input,textarea{
- margin:8px 0;
- padding:10px;
- border-radius:8px;
- border:none;
+
+.dmList div{
+ padding:12px;
+ border-bottom:1px solid #222;
 }
 </style>
 </head>
@@ -117,55 +134,37 @@ input,textarea{
 
 <div class="phone">
 
-<div class="header">LOYD</div>
+<div class="header">
+<div>LOYD</div>
+<div onclick="openDM()">💬</div>
+</div>
 
-<div id="home">
-
-<div class="story" id="story"></div>
-
+<div class="storyRow" id="stories"></div>
 <div class="feed" id="feed"></div>
 
-</div>
-
-<button class="writeBtn" onclick="openWrite()">+</button>
+<div class="fab" onclick="write()">+</div>
 
 <div class="bottom">
-<button onclick="home()">홈</button>
-<button onclick="openDM()">DM</button>
-<button onclick="openNotice()">알림</button>
-<button onclick="openProfile()">프로필</button>
+<div>홈</div>
+<div onclick="openDM()">DM</div>
+<div onclick="alert('알림 없음')">알림</div>
+<div onclick="profile()">프로필</div>
 </div>
 
-<div id="writeModal" class="modal">
-<h2>글쓰기</h2>
-<textarea id="postText" placeholder="내용"></textarea>
-<input id="imgUrl" placeholder="이미지 url">
-<button onclick="submitPost()">등록</button>
-<button onclick="closeWrite()">닫기</button>
-</div>
-
-<div id="profileModal" class="modal">
-<h2>프로필</h2>
-<input id="nick" placeholder="닉네임">
-<input id="pfp" placeholder="프로필이미지">
-<label>아티스트</label>
-<input type="checkbox" id="artist">
-<button onclick="saveProfile()">저장</button>
-<button onclick="closeProfile()">닫기</button>
-</div>
+<div class="panel" id="commentPanel"></div>
+<div class="panel" id="dmPanel"></div>
 
 </div>
 
 <script>
 
-let user = JSON.parse(localStorage.getItem("user")) || {
- name:"user",
+let user=JSON.parse(localStorage.getItem("user"))||{
+ name:"USER",
  pfp:"https://i.pravatar.cc/100",
- artist:false,
- followers:0
+ artist:false
 };
 
-let posts = JSON.parse(localStorage.getItem("posts")) || [];
+let posts=JSON.parse(localStorage.getItem("posts"))||[];
 
 function save(){
  localStorage.setItem("posts",JSON.stringify(posts));
@@ -173,52 +172,46 @@ function save(){
 }
 
 function renderStories(){
- let s=document.getElementById("story");
- s.innerHTML=`
- <div>
-  <img src="${user.pfp}">
-  <div>${user.name}</div>
- </div>
- `;
+ stories.innerHTML=`
+ <div class="story">
+ <img src="${user.pfp}">
+ <div>${user.name}</div>
+ </div>`;
 }
 
 function renderFeed(){
- let f=document.getElementById("feed");
- f.innerHTML="";
+ feed.innerHTML="";
  posts.forEach((p,i)=>{
-   f.innerHTML+=`
-   <div class="post">
-     <b>${p.author} ${p.artist?"✔️":""}</b>
-     <p>${p.text}</p>
-     ${p.img?`<img src="${p.img}">`:''}
-     <div>
-       <button onclick="like(${i})">공감 ${p.likes}</button>
-       <button onclick="comment(${i})">댓글</button>
-     </div>
+   feed.innerHTML+=`
+   <div class="card">
+   <div class="cardTop">
+   <img class="avatar" src="${p.pfp}">
+   <div>${p.author}</div>
+   <div class="follow">팔로우</div>
    </div>
-   `;
+   <div>${p.text}</div>
+   ${p.img?`<img src="${p.img}">`:''}
+   <div class="actions">
+   <div onclick="like(${i})">❤ ${p.likes}</div>
+   <div onclick="openComments(${i})">💬 ${p.comments.length}</div>
+   </div>
+   </div>`;
  });
 }
 
-function openWrite(){
- document.getElementById("writeModal").style.display="flex";
-}
-function closeWrite(){
- document.getElementById("writeModal").style.display="none";
-}
-
-function submitPost(){
+function write(){
+ let t=prompt("내용");
+ if(!t) return;
  posts.unshift({
   author:user.name,
-  artist:user.artist,
-  text:postText.value,
-  img:imgUrl.value,
+  pfp:user.pfp,
+  text:t,
+  img:"",
   likes:0,
   comments:[]
  });
  save();
  renderFeed();
- closeWrite();
 }
 
 function like(i){
@@ -227,23 +220,39 @@ function like(i){
  renderFeed();
 }
 
-function openProfile(){
- document.getElementById("profileModal").style.display="flex";
-}
-function closeProfile(){
- document.getElementById("profileModal").style.display="none";
+function openComments(i){
+ let panel=document.getElementById("commentPanel");
+ panel.style.bottom="0";
+ panel.innerHTML=`<h3>댓글</h3>`;
+ posts[i].comments.forEach(c=>{
+   panel.innerHTML+=`<div>${c}</div>`;
+ });
+ panel.innerHTML+=`
+ <input id="cInput">
+ <button onclick="addComment(${i})">작성</button>
+ <button onclick="closePanel()">닫기</button>`;
 }
 
-function saveProfile(){
- user.name=nick.value;
- user.pfp=pfp.value;
- user.artist=artist.checked;
+function addComment(i){
+ posts[i].comments.push(cInput.value);
  save();
- renderStories();
- closeProfile();
+ openComments(i);
 }
 
-function home(){}
+function closePanel(){
+ document.querySelectorAll(".panel").forEach(p=>p.style.bottom="-100%");
+}
+
+function openDM(){
+ let p=document.getElementById("dmPanel");
+ p.style.bottom="0";
+ p.innerHTML=`<h3>DM</h3>
+ <div class="dmList">
+ <div>Artist1 (읽음)</div>
+ <div>Artist2</div>
+ </div>
+ <button onclick="closePanel()">닫기</button>`;
+}
 
 renderStories();
 renderFeed();
