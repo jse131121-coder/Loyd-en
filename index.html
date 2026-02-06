@@ -2,263 +2,137 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>LOYD</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roleplay Chat</title>
 <style>
-*{box-sizing:border-box}
-body{
- margin:0;
- background:#000;
- display:flex;
- justify-content:center;
- font-family:-apple-system,BlinkMacSystemFont;
- color:#fff;
-}
-
-.phone{
- width:390px;
- height:844px;
- background:#0b0b0b;
- position:relative;
- overflow:hidden;
- border-radius:40px;
-}
-
-.header{
- display:flex;
- justify-content:space-between;
- padding:16px;
- font-size:20px;
- font-weight:700;
-}
-
-.storyRow{
- display:flex;
- gap:14px;
- overflow-x:auto;
- padding:10px 14px;
-}
-
-.story{
- text-align:center;
- font-size:11px;
-}
-
-.story img{
- width:64px;
- height:64px;
- border-radius:50%;
- padding:2px;
- background:linear-gradient(45deg,#ff2e88,#ff7a00);
-}
-
-.feed{
- height:610px;
- overflow:auto;
-}
-
-.card{
- background:#151515;
- margin:14px;
- border-radius:20px;
- padding:14px;
- animation:fade .3s;
-}
-@keyframes fade{from{opacity:0;transform:translateY(20px)}}
-
-.avatar{width:40px;height:40px;border-radius:50%}
-.cardTop{display:flex;align-items:center;gap:10px}
-
-.follow{
- margin-left:auto;
- font-size:12px;
- background:#ff2e88;
- padding:4px 10px;
- border-radius:10px;
-}
-
-.card img{
- width:100%;
- border-radius:14px;
- margin-top:10px;
-}
-
-.actions{display:flex;gap:20px;margin-top:10px;color:#bbb}
-
-.bottom{
- position:absolute;
- bottom:0;
- width:100%;
- display:flex;
- justify-content:space-around;
- background:#111;
- padding:12px 0;
-}
-
-.fab{
- position:absolute;
- right:20px;
- bottom:90px;
- width:58px;
- height:58px;
- border-radius:50%;
- background:#ff2e88;
- display:flex;
- align-items:center;
- justify-content:center;
- font-size:28px;
-}
-
-.panel{
- position:absolute;
- bottom:-100%;
- left:0;
- width:100%;
- height:70%;
- background:#111;
- border-radius:20px 20px 0 0;
- padding:20px;
- transition:.3s;
- overflow:auto;
-}
-
-.dmList div{
- padding:12px;
- border-bottom:1px solid #222;
-}
+body{font-family:Arial;margin:0;background:#f4f4f4;transition:0.3s}
+.header{padding:10px;background:white;display:flex;gap:10px;justify-content:center;border-bottom:1px solid #ddd;flex-wrap:wrap}
+.header button{padding:8px 14px;border:none;border-radius:20px;cursor:pointer}
+.chat{padding:20px;height:65vh;overflow-y:auto}
+.message{display:flex;margin-bottom:15px}
+.message.left{justify-content:flex-start}
+.message.right{justify-content:flex-end}
+.bubble{max-width:60%;padding:10px 15px;border-radius:20px}
+.left .bubble{background:white}
+.right .bubble{background:#8e1c1c;color:white}
+.profile{display:flex;align-items:center;margin-right:10px}
+.profile img{width:35px;height:35px;border-radius:50%;margin-right:6px}
+.inputBox{position:fixed;bottom:0;width:100%;background:white;padding:10px;border-top:1px solid #ddd}
+.notice{background:#ffe9e9;padding:10px;text-align:center;font-weight:bold}
+.settings{position:fixed;right:10px;top:10px;background:white;padding:12px;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.1);display:none}
+.dark{background:#111;color:white}
+.dark .bubble{background:#333;color:white}
+.dark .left .bubble{background:#222}
 </style>
 </head>
-
 <body>
 
-<div class="phone">
+<div class="notice" id="notice">📢 공지: 환영합니다</div>
 
 <div class="header">
-<div>LOYD</div>
-<div onclick="openDM()">💬</div>
+  <button onclick="setUser('SEORIN')">SEORIN</button>
+  <button onclick="setUser('HARI')">HARI</button>
+  <button onclick="setUser('ROSSY')">ROSSY</button>
+  <button onclick="setUser('DANA')">DANA</button>
+  <button onclick="toggleSettings()">⚙ 설정</button>
 </div>
 
-<div class="storyRow" id="stories"></div>
-<div class="feed" id="feed"></div>
+<div class="chat" id="chat"></div>
 
-<div class="fab" onclick="write()">+</div>
-
-<div class="bottom">
-<div>홈</div>
-<div onclick="openDM()">DM</div>
-<div onclick="alert('알림 없음')">알림</div>
-<div onclick="profile()">프로필</div>
+<div class="inputBox">
+  <input id="msg" placeholder="메시지 입력" style="width:80%">
+  <button onclick="sendMsg()">전송</button>
 </div>
 
-<div class="panel" id="commentPanel"></div>
-<div class="panel" id="dmPanel"></div>
-
+<div class="settings" id="settings">
+  <h4>프로필 설정</h4>
+  이름: <input id="nameInput"><br><br>
+  프사 URL: <input id="imgInput"><br><br>
+  <button onclick="saveProfile()">저장</button>
+  <hr>
+  <h4>공지 변경 (관리자만)</h4>
+  <input id="noticeInput">
+  <button onclick="changeNotice()">공지 설정</button>
+  <hr>
+  <h4>테마</h4>
+  <button onclick="setTheme('light')">화이트</button>
+  <button onclick="setTheme('dark')">다크</button>
 </div>
 
 <script>
+let currentUser = localStorage.getItem('currentUser') || 'SEORIN';
+const adminUser = 'SEORIN';
 
-let user=JSON.parse(localStorage.getItem("user"))||{
- name:"USER",
- pfp:"https://i.pravatar.cc/100",
- artist:false
+const users={
+ SEORIN:{img:'https://i.pravatar.cc/40?img=1',badge:'⭐'},
+ HARI:{img:'https://i.pravatar.cc/40?img=2',badge:'💎'},
+ ROSSY:{img:'https://i.pravatar.cc/40?img=3',badge:'✔'},
+ DANA:{img:'https://i.pravatar.cc/40?img=4',badge:'🔥'}
 };
 
-let posts=JSON.parse(localStorage.getItem("posts"))||[];
+function loadSettings(){
+ const theme = localStorage.getItem('theme');
+ if(theme==='dark') document.body.classList.add('dark');
+ const notice = localStorage.getItem('notice');
+ if(notice) document.getElementById('notice').innerText='📢 '+notice;
+}
+loadSettings();
 
-function save(){
- localStorage.setItem("posts",JSON.stringify(posts));
- localStorage.setItem("user",JSON.stringify(user));
+function setUser(name){
+ currentUser=name;
+ localStorage.setItem('currentUser',name);
+ alert(name+' 시점 전환');
 }
 
-function renderStories(){
- stories.innerHTML=`
- <div class="story">
- <img src="${user.pfp}">
- <div>${user.name}</div>
- </div>`;
+function sendMsg(){
+ const text=document.getElementById('msg').value;
+ if(!text) return;
+ const chat=document.getElementById('chat');
+ const wrap=document.createElement('div');
+ wrap.className='message right';
+ wrap.innerHTML=`<div class='bubble'>${text}</div>`;
+ chat.appendChild(wrap);
+ document.getElementById('msg').value='';
 }
 
-function renderFeed(){
- feed.innerHTML="";
- posts.forEach((p,i)=>{
-   feed.innerHTML+=`
-   <div class="card">
-   <div class="cardTop">
-   <img class="avatar" src="${p.pfp}">
-   <div>${p.author}</div>
-   <div class="follow">팔로우</div>
-   </div>
-   <div>${p.text}</div>
-   ${p.img?`<img src="${p.img}">`:''}
-   <div class="actions">
-   <div onclick="like(${i})">❤ ${p.likes}</div>
-   <div onclick="openComments(${i})">💬 ${p.comments.length}</div>
-   </div>
-   </div>`;
- });
-}
-
-function write(){
- let t=prompt("내용");
- if(!t) return;
- posts.unshift({
-  author:user.name,
-  pfp:user.pfp,
-  text:t,
-  img:"",
-  likes:0,
-  comments:[]
- });
- save();
- renderFeed();
-}
-
-function like(i){
- posts[i].likes++;
- save();
- renderFeed();
-}
-
-function openComments(i){
- let panel=document.getElementById("commentPanel");
- panel.style.bottom="0";
- panel.innerHTML=`<h3>댓글</h3>`;
- posts[i].comments.forEach(c=>{
-   panel.innerHTML+=`<div>${c}</div>`;
- });
- panel.innerHTML+=`
- <input id="cInput">
- <button onclick="addComment(${i})">작성</button>
- <button onclick="closePanel()">닫기</button>`;
-}
-
-function addComment(i){
- posts[i].comments.push(cInput.value);
- save();
- openComments(i);
-}
-
-function closePanel(){
- document.querySelectorAll(".panel").forEach(p=>p.style.bottom="-100%");
-}
-
-function openDM(){
- let p=document.getElementById("dmPanel");
- p.style.bottom="0";
- p.innerHTML=`<h3>DM</h3>
- <div class="dmList">
- <div>Artist1 (읽음)</div>
- <div>Artist2</div>
+function receiveMsg(sender,text){
+ const chat=document.getElementById('chat');
+ const wrap=document.createElement('div');
+ wrap.className='message left';
+ wrap.innerHTML=`
+ <div class='profile'>
+  <img src='${users[sender].img}'>
+  <div>${sender} ${users[sender].badge}</div>
  </div>
- <button onclick="closePanel()">닫기</button>`;
+ <div class='bubble'>${text}</div>`;
+ chat.appendChild(wrap);
 }
 
-renderStories();
-renderFeed();
+function toggleSettings(){
+ const s=document.getElementById('settings');
+ s.style.display = s.style.display==='block'?'none':'block';
+}
 
+function saveProfile(){
+ const name=document.getElementById('nameInput').value;
+ const img=document.getElementById('imgInput').value;
+ if(name){ currentUser=name; localStorage.setItem('currentUser',name); }
+ if(img){ users[currentUser].img=img; localStorage.setItem('profileImg',img); }
+ alert('프로필 저장됨');
+}
+
+function changeNotice(){
+ if(currentUser !== adminUser){ alert('관리자만 변경 가능'); return; }
+ const text=document.getElementById('noticeInput').value;
+ document.getElementById('notice').innerText='📢 '+text;
+ localStorage.setItem('notice',text);
+}
+
+function setTheme(t){
+ if(t==='dark'){ document.body.classList.add('dark'); localStorage.setItem('theme','dark'); }
+ else{ document.body.classList.remove('dark'); localStorage.setItem('theme','light'); }
+}
 </script>
 
 </body>
 </html>
-
