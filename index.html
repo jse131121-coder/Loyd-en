@@ -5,28 +5,40 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Roleplay Chat</title>
 <style>
-body{font-family:Arial;margin:0;background:#f4f4f4;transition:0.3s}
-.header{padding:10px;background:white;display:flex;gap:10px;justify-content:center;border-bottom:1px solid #ddd;flex-wrap:wrap}
-.header button{padding:8px 14px;border:none;border-radius:20px;cursor:pointer}
-.chat{padding:20px;height:65vh;overflow-y:auto}
-.message{display:flex;margin-bottom:15px}
+body{font-family:Arial;margin:0;background:#e5ddd5}
+.phone{
+ max-width:420px;
+ margin:auto;
+ background:white;
+ height:100vh;
+ display:flex;
+ flex-direction:column;
+ border:1px solid #ccc;
+}
+.notice{background:#f3f3f3;padding:10px;text-align:center;font-weight:bold}
+.header{padding:10px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;border-bottom:1px solid #ddd}
+.header button{padding:6px 12px;border:none;border-radius:20px;cursor:pointer}
+.chat{flex:1;padding:15px;overflow-y:auto;background:#efeae2}
+.message{display:flex;margin-bottom:12px}
 .message.left{justify-content:flex-start}
 .message.right{justify-content:flex-end}
-.bubble{max-width:60%;padding:10px 15px;border-radius:20px}
+.bubble{max-width:65%;padding:10px 14px;border-radius:16px}
 .left .bubble{background:white}
 .right .bubble{background:#8e1c1c;color:white}
-.profile{display:flex;align-items:center;margin-right:10px}
-.profile img{width:35px;height:35px;border-radius:50%;margin-right:6px}
-.inputBox{position:fixed;bottom:0;width:100%;background:white;padding:10px;border-top:1px solid #ddd}
-.notice{background:#ffe9e9;padding:10px;text-align:center;font-weight:bold}
+.profile{display:flex;align-items:center;margin-right:6px;font-size:12px}
+.profile img{width:32px;height:32px;border-radius:50%;margin-right:5px}
+.inputBox{display:flex;border-top:1px solid #ddd;padding:10px}
+.inputBox input{flex:1;padding:8px}
 .settings{position:fixed;right:10px;top:10px;background:white;padding:12px;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.1);display:none}
 .dark{background:#111;color:white}
-.dark .bubble{background:#333;color:white}
-.dark .left .bubble{background:#222}
+.dark .chat{background:#222}
+.dark .left .bubble{background:#333;color:white}
+.dark .right .bubble{background:#555}
 </style>
 </head>
 <body>
 
+<div class="phone">
 <div class="notice" id="notice">📢 공지: 환영합니다</div>
 
 <div class="header">
@@ -34,14 +46,15 @@ body{font-family:Arial;margin:0;background:#f4f4f4;transition:0.3s}
   <button onclick="setUser('HARI')">HARI</button>
   <button onclick="setUser('ROSSY')">ROSSY</button>
   <button onclick="setUser('DANA')">DANA</button>
-  <button onclick="toggleSettings()">⚙ 설정</button>
+  <button onclick="toggleSettings()">⚙</button>
 </div>
 
 <div class="chat" id="chat"></div>
 
 <div class="inputBox">
-  <input id="msg" placeholder="메시지 입력" style="width:80%">
+  <input id="msg" placeholder="메시지 입력">
   <button onclick="sendMsg()">전송</button>
+</div>
 </div>
 
 <div class="settings" id="settings">
@@ -62,6 +75,7 @@ body{font-family:Arial;margin:0;background:#f4f4f4;transition:0.3s}
 <script>
 let currentUser = localStorage.getItem('currentUser') || 'SEORIN';
 const adminUser = 'SEORIN';
+let messages = JSON.parse(localStorage.getItem('messages') || '[]');
 
 const users={
  SEORIN:{img:'https://i.pravatar.cc/40?img=1',badge:'⭐'},
@@ -70,42 +84,43 @@ const users={
  DANA:{img:'https://i.pravatar.cc/40?img=4',badge:'🔥'}
 };
 
-function loadSettings(){
- const theme = localStorage.getItem('theme');
- if(theme==='dark') document.body.classList.add('dark');
- const notice = localStorage.getItem('notice');
- if(notice) document.getElementById('notice').innerText='📢 '+notice;
+function renderChat(){
+ const chat=document.getElementById('chat');
+ chat.innerHTML='';
+ messages.forEach(m=>{
+  const wrap=document.createElement('div');
+  const side = m.sender === currentUser ? 'right':'left';
+  wrap.className='message '+side;
+
+  if(side==='left'){
+    wrap.innerHTML=`
+      <div class='profile'>
+        <img src='${users[m.sender].img}'>
+        <div>${m.sender} ${users[m.sender].badge}</div>
+      </div>
+      <div class='bubble'>${m.text}</div>`;
+  }else{
+    wrap.innerHTML=`<div class='bubble'>${m.text}</div>`;
+  }
+
+  chat.appendChild(wrap);
+ });
 }
-loadSettings();
+renderChat();
 
 function setUser(name){
  currentUser=name;
  localStorage.setItem('currentUser',name);
- alert(name+' 시점 전환');
+ renderChat();
 }
 
 function sendMsg(){
  const text=document.getElementById('msg').value;
  if(!text) return;
- const chat=document.getElementById('chat');
- const wrap=document.createElement('div');
- wrap.className='message right';
- wrap.innerHTML=`<div class='bubble'>${text}</div>`;
- chat.appendChild(wrap);
+ messages.push({sender:currentUser,text});
+ localStorage.setItem('messages',JSON.stringify(messages));
  document.getElementById('msg').value='';
-}
-
-function receiveMsg(sender,text){
- const chat=document.getElementById('chat');
- const wrap=document.createElement('div');
- wrap.className='message left';
- wrap.innerHTML=`
- <div class='profile'>
-  <img src='${users[sender].img}'>
-  <div>${sender} ${users[sender].badge}</div>
- </div>
- <div class='bubble'>${text}</div>`;
- chat.appendChild(wrap);
+ renderChat();
 }
 
 function toggleSettings(){
@@ -116,9 +131,9 @@ function toggleSettings(){
 function saveProfile(){
  const name=document.getElementById('nameInput').value;
  const img=document.getElementById('imgInput').value;
- if(name){ currentUser=name; localStorage.setItem('currentUser',name); }
- if(img){ users[currentUser].img=img; localStorage.setItem('profileImg',img); }
+ if(img){ users[currentUser].img=img; }
  alert('프로필 저장됨');
+ renderChat();
 }
 
 function changeNotice(){
@@ -132,6 +147,11 @@ function setTheme(t){
  if(t==='dark'){ document.body.classList.add('dark'); localStorage.setItem('theme','dark'); }
  else{ document.body.classList.remove('dark'); localStorage.setItem('theme','light'); }
 }
+
+const notice = localStorage.getItem('notice');
+if(notice) document.getElementById('notice').innerText='📢 '+notice;
+const theme = localStorage.getItem('theme');
+if(theme==='dark') document.body.classList.add('dark');
 </script>
 
 </body>
