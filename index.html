@@ -2,273 +2,254 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>LOYD</title>
 
 <style>
-*{box-sizing:border-box}
 body{
  margin:0;
- background:#0e0e0f;
- font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+ background:#000;
+ font-family:-apple-system,BlinkMacSystemFont;
+ color:#fff;
  display:flex;
  justify-content:center;
 }
 
-/* PHONE */
 .phone{
  width:390px;
  height:844px;
- background:#0f0f10;
- color:white;
+ background:#0b0b0b;
  position:relative;
  overflow:hidden;
 }
 
-/* HEADER */
 .header{
+ padding:14px;
+ font-weight:700;
+ font-size:20px;
+}
+
+.story{
+ display:flex;
+ overflow-x:auto;
+ padding:10px;
+ gap:12px;
+}
+
+.story div{
+ text-align:center;
+ font-size:12px;
+}
+
+.story img{
+ width:60px;
+ height:60px;
+ border-radius:50%;
+ border:2px solid #ff3b82;
+}
+
+.feed{
+ height:600px;
+ overflow:auto;
+ padding-bottom:100px;
+}
+
+.post{
+ padding:14px;
+ border-bottom:1px solid #222;
+}
+
+.post img{
+ width:100%;
+ border-radius:12px;
+ margin-top:8px;
+}
+
+.bottom{
+ position:absolute;
+ bottom:0;
+ width:100%;
+ display:flex;
+ justify-content:space-around;
+ background:#111;
+ padding:12px;
+}
+
+button{
+ background:none;
+ border:none;
+ color:white;
+ font-size:14px;
+}
+
+.writeBtn{
+ position:absolute;
+ right:20px;
+ bottom:90px;
+ background:#ff3b82;
+ width:56px;
+ height:56px;
+ border-radius:50%;
+ font-size:26px;
+}
+
+.modal{
  position:absolute;
  top:0;
  left:0;
- right:0;
- height:56px;
- display:flex;
- justify-content:space-between;
- align-items:center;
- padding:0 16px;
- border-bottom:1px solid #1f1f1f;
- font-weight:700;
-}
-
-/* CONTENT */
-#content{
- position:absolute;
- top:56px;
- bottom:64px;
- overflow:auto;
  width:100%;
- padding-bottom:30px;
+ height:100%;
+ background:#000;
+ display:none;
+ flex-direction:column;
+ padding:20px;
 }
-
-/* STORIES */
-.stories{
- display:flex;
- overflow-x:auto;
- gap:14px;
- padding:12px;
+input,textarea{
+ margin:8px 0;
+ padding:10px;
+ border-radius:8px;
+ border:none;
 }
-.story{text-align:center;min-width:72px}
-.story img{
- width:64px;height:64px;border-radius:50%;
- border:2px solid #4fc3ff;
-}
-.story span{font-size:12px}
-
-/* CARD */
-.card{
- background:#18181a;
- margin:12px;
- border-radius:18px;
- padding:14px;
- box-shadow:0 0 0 1px #242424;
-}
-.card-header{
- display:flex;align-items:center;gap:10px;margin-bottom:8px
-}
-.card-header img{
- width:40px;height:40px;border-radius:50%
-}
-.artist{color:#4fc3ff;font-size:12px;margin-left:6px}
-.postimg{width:100%;border-radius:14px;margin-top:10px}
-.comment{margin-left:12px;font-size:14px}
-
-/* CHAT */
-.chatbox{height:420px;overflow:auto;padding:10px}
-.msgme{text-align:right;margin:6px}
-.msgother{text-align:left;margin:6px}
-
-/* TABBAR */
-.tabbar{
- position:absolute;
- bottom:0;
- left:0;
- right:0;
- height:64px;
- background:#121213;
- display:flex;
- justify-content:space-around;
- align-items:center;
- border-top:1px solid #1c1c1c;
- font-size:22px;
-}
-button{cursor:pointer}
 </style>
 </head>
 
 <body>
+
 <div class="phone">
 
-<div class="header">
-<div>LOYD</div>
-<div onclick="show('notifications')">🔔</div>
+<div class="header">LOYD</div>
+
+<div id="home">
+
+<div class="story" id="story"></div>
+
+<div class="feed" id="feed"></div>
+
 </div>
 
-<div id="content"></div>
+<button class="writeBtn" onclick="openWrite()">+</button>
 
-<div class="tabbar">
-<div onclick="show('home')">🏠</div>
-<div onclick="show('write')">✏️</div>
-<div onclick="show('dm')">✉️</div>
-<div onclick="show('profile')">👤</div>
+<div class="bottom">
+<button onclick="home()">홈</button>
+<button onclick="openDM()">DM</button>
+<button onclick="openNotice()">알림</button>
+<button onclick="openProfile()">프로필</button>
+</div>
+
+<div id="writeModal" class="modal">
+<h2>글쓰기</h2>
+<textarea id="postText" placeholder="내용"></textarea>
+<input id="imgUrl" placeholder="이미지 url">
+<button onclick="submitPost()">등록</button>
+<button onclick="closeWrite()">닫기</button>
+</div>
+
+<div id="profileModal" class="modal">
+<h2>프로필</h2>
+<input id="nick" placeholder="닉네임">
+<input id="pfp" placeholder="프로필이미지">
+<label>아티스트</label>
+<input type="checkbox" id="artist">
+<button onclick="saveProfile()">저장</button>
+<button onclick="closeProfile()">닫기</button>
 </div>
 
 </div>
 
 <script>
-let user=JSON.parse(localStorage.getItem("user"))||null
-let posts=JSON.parse(localStorage.getItem("posts"))||[]
-let comments=JSON.parse(localStorage.getItem("comments"))||[]
-let dms=JSON.parse(localStorage.getItem("dms"))||[]
-let notifications=JSON.parse(localStorage.getItem("notifications"))||[]
+
+let user = JSON.parse(localStorage.getItem("user")) || {
+ name:"user",
+ pfp:"https://i.pravatar.cc/100",
+ artist:false,
+ followers:0
+};
+
+let posts = JSON.parse(localStorage.getItem("posts")) || [];
 
 function save(){
- localStorage.setItem("user",JSON.stringify(user))
- localStorage.setItem("posts",JSON.stringify(posts))
- localStorage.setItem("comments",JSON.stringify(comments))
- localStorage.setItem("dms",JSON.stringify(dms))
- localStorage.setItem("notifications",JSON.stringify(notifications))
+ localStorage.setItem("posts",JSON.stringify(posts));
+ localStorage.setItem("user",JSON.stringify(user));
 }
 
-/* SCREEN SWITCH */
-function show(page){
-const c=document.getElementById("content")
-
-if(page=="profile"){
- c.innerHTML=`
- <h3>프로필 설정</h3>
- 이름 <input id="n"><br>
- 역할 <select id="r"><option>fan</option><option>artist</option></select><br>
- 프사 <input type="file" id="img"><br>
- <button onclick="saveProfile()">저장</button>`
-}
-
-/* HOME */
-if(page=="home"){
- let html='<div class="stories">'
- posts.filter(p=>p.user.role=="artist").forEach(p=>{
-   html+=`<div class="story"><img src="${p.user.img}"><span>${p.user.name}</span></div>`
- })
- html+='</div>'
-
- posts.forEach(p=>{
- html+=`
- <div class="card">
- <div class="card-header">
-  <img src="${p.user.img}">
-  <div><b>${p.user.name}</b>${p.user.role=="artist"?"<span class='artist'>ARTIST</span>":""}</div>
- </div>
-
- <div>${p.text}</div>
- ${p.img?`<img src="${p.img}" class="postimg">`:""}
-
+function renderStories(){
+ let s=document.getElementById("story");
+ s.innerHTML=`
  <div>
- <button onclick="like(${p.id})">❤️ ${p.likes}</button>
- <button onclick="addComment(${p.id})">댓글</button>
- <button onclick="openDM('${p.user.name}')">DM</button>
+  <img src="${user.pfp}">
+  <div>${user.name}</div>
  </div>
-
- ${comments.filter(c=>c.postId==p.id).map(c=>`<div class="comment">${c.text}</div>`).join("")}
-
- </div>`
- })
- c.innerHTML=html
+ `;
 }
 
-/* WRITE */
-if(page=="write"){
- c.innerHTML=`
- <h3>글쓰기</h3>
- <textarea id="t"></textarea><br>
- <input type="file" id="pimg"><br>
- <button onclick="write()">등록</button>`
+function renderFeed(){
+ let f=document.getElementById("feed");
+ f.innerHTML="";
+ posts.forEach((p,i)=>{
+   f.innerHTML+=`
+   <div class="post">
+     <b>${p.author} ${p.artist?"✔️":""}</b>
+     <p>${p.text}</p>
+     ${p.img?`<img src="${p.img}">`:''}
+     <div>
+       <button onclick="like(${i})">공감 ${p.likes}</button>
+       <button onclick="comment(${i})">댓글</button>
+     </div>
+   </div>
+   `;
+ });
 }
 
-/* DM */
-if(page=="dm"){
- let html="<h3>DM</h3>"
- dms.forEach(m=>html+=`<div onclick="openDM('${m.from}')">${m.from}</div>`)
- c.innerHTML=html
+function openWrite(){
+ document.getElementById("writeModal").style.display="flex";
+}
+function closeWrite(){
+ document.getElementById("writeModal").style.display="none";
 }
 
-if(page=="notifications"){
- c.innerHTML=notifications.map(n=>"<div>"+n+"</div>").join("")
-}
+function submitPost(){
+ posts.unshift({
+  author:user.name,
+  artist:user.artist,
+  text:postText.value,
+  img:imgUrl.value,
+  likes:0,
+  comments:[]
+ });
+ save();
+ renderFeed();
+ closeWrite();
 }
 
-/* PROFILE SAVE */
+function like(i){
+ posts[i].likes++;
+ save();
+ renderFeed();
+}
+
+function openProfile(){
+ document.getElementById("profileModal").style.display="flex";
+}
+function closeProfile(){
+ document.getElementById("profileModal").style.display="none";
+}
+
 function saveProfile(){
- const name=document.getElementById("n").value
- const role=document.getElementById("r").value
- const file=document.getElementById("img").files[0]
- const reader=new FileReader()
- reader.onload=function(){
-  user={name,role,img:reader.result}
-  save()
-  show('home')
- }
- reader.readAsDataURL(file)
+ user.name=nick.value;
+ user.pfp=pfp.value;
+ user.artist=artist.checked;
+ save();
+ renderStories();
+ closeProfile();
 }
 
-/* WRITE POST */
-function write(){
- const t=document.getElementById("t").value
- const file=document.getElementById("pimg").files[0]
- const reader=new FileReader()
- reader.onload=function(){
-  posts.unshift({id:Date.now(),text:t,img:reader.result,likes:0,user})
-  notifications.push("새 글 작성")
-  save(); show('home')
- }
- if(file) reader.readAsDataURL(file)
-}
+function home(){}
 
-/* LIKE */
-function like(id){
- const p=posts.find(x=>x.id==id)
- p.likes++
- save(); show('home')
-}
+renderStories();
+renderFeed();
 
-/* COMMENT */
-function addComment(id){
- const t=prompt("댓글")
- comments.push({postId:id,text:t})
- save(); show('home')
-}
-
-/* DM */
-function openDM(name){
- const c=document.getElementById("content")
- c.innerHTML=`<div class="chatbox" id="chat"></div><input id="m"><button onclick="sendDM('${name}')">전송</button>`
- renderChat(name)
-}
-
-function sendDM(name){
- const t=document.getElementById("m").value
- dms.push({from:user.name,to:name,text:t})
- notifications.push("새 DM")
- save(); renderChat(name)
-}
-
-function renderChat(name){
- const div=document.getElementById("chat")
- div.innerHTML=""
- dms.filter(m=>m.from==name||m.to==name).forEach(m=>{
-   div.innerHTML+=`<div class="${m.from==user.name?'msgme':'msgother'}">${m.text}</div>`
- })
-}
-
-show("home")
 </script>
+
 </body>
 </html>
+
