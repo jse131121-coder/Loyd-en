@@ -3,78 +3,90 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Roleplay Chat</title>
+<title>LOYD Chat</title>
 <style>
-body{font-family:Arial;margin:0;background:#e5ddd5;font-size:13px}
-.phone{max-width:420px;margin:auto;background:white;height:100vh;display:flex;flex-direction:column;border:1px solid #ccc}
-.notice{background:#f3f3f3;padding:8px;text-align:center;font-weight:bold;font-size:12px}
-.header{padding:8px;display:flex;gap:6px;flex-wrap:wrap;justify-content:center;border-bottom:1px solid #ddd}
-.header button{padding:5px 10px;border:none;border-radius:20px;cursor:pointer;font-size:12px}
-.chat{flex:1;padding:12px;overflow-y:auto;background:#efeae2}
-.message{display:flex;margin-bottom:10px}
+body{font-family:Arial;margin:0;background:#e8e2df;font-size:13px}
+.phone{max-width:420px;margin:auto;background:#f6f2f1;height:100vh;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#efe9e7;border-bottom:1px solid #ddd}
+.circle{width:38px;height:38px;border-radius:50%;background:#ddd;display:flex;align-items:center;justify-content:center;font-weight:bold}
+.title{text-align:center;font-weight:bold}
+.notice{background:#e3e8ec;padding:8px 12px;font-size:12px;border-bottom:1px solid #ddd}
+.userbar{display:flex;gap:6px;justify-content:center;padding:6px;background:#f1ecea;border-bottom:1px solid #ddd}
+.userbar button{border:none;border-radius:14px;padding:4px 10px;font-size:11px;cursor:pointer;background:white}
+.chat{flex:1;padding:14px;overflow-y:auto}
+.message{display:flex;margin-bottom:12px}
 .message.left{justify-content:flex-start}
 .message.right{justify-content:flex-end}
 .msgWrap{display:flex;flex-direction:column}
-.nameRow{font-size:11px;margin-bottom:3px;display:flex;align-items:center;gap:5px}
-.nameRow img{width:26px;height:26px;border-radius:50%}
-.bubble{max-width:65%;padding:8px 12px;border-radius:14px;font-size:13px;word-break:keep-all;overflow-wrap:break-word;}
-.left .bubble{background:white}
-.right .bubble{background:#8e1c1c;color:white}
-.inputBox{display:flex;border-top:1px solid #ddd;padding:8px}
-.inputBox input{flex:1;padding:6px;font-size:13px}
-.settings{position:fixed;right:10px;top:10px;background:white;padding:12px;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.1);display:none;font-size:12px}
-.dark{background:#111;color:white}
-.dark .chat{background:#222}
-.dark .left .bubble{background:#333;color:white}
-.dark .right .bubble{background:#555}
+.nameRow{font-size:11px;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.nameRow img{width:28px;height:28px;border-radius:50%}
+.bubble{max-width:70%;padding:10px 14px;border-radius:16px;font-size:13px;word-break:keep-all;overflow-wrap:break-word}
+.left .bubble{background:#7c0b0b;color:white}
+.right .bubble{background:white;border:1px solid #7c0b0b;color:#7c0b0b}
+.inputBox{padding:10px;background:#efe9e7;border-top:1px solid #ddd}
+.inputInner{background:white;border-radius:20px;padding:8px 12px;display:flex;align-items:center}
+.inputInner input{flex:1;border:none;outline:none;font-size:13px}
+.sendBtn{background:#c89c9c;color:white;border:none;border-radius:16px;padding:6px 12px;margin-left:6px;cursor:pointer}
+.settings{position:fixed;right:10px;top:70px;background:white;padding:12px;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.1);display:none;font-size:12px}
 </style>
 </head>
 <body>
 
 <div class="phone">
-<div class="notice" id="notice">📢 공지: 환영합니다</div>
+<div class="topbar">
+  <div class="circle">LOYD</div>
+  <div class="title">One and Only</div>
+  <a href="#" id="linkBtn" class="circle">E</a>
+</div>
 
-<div class="header">
+<div class="notice" id="notice">📢 공지 - 필독</div>
+
+<div class="userbar">
   <button onclick="setUser('SEORIN')">SEORIN</button>
   <button onclick="setUser('HARI')">HARI</button>
   <button onclick="setUser('ROSSY')">ROSSY</button>
   <button onclick="setUser('DANA')">DANA</button>
-  <button onclick="toggleSettings()">⚙</button>
+  <button onclick="toggleSettings()">⚙ 설정</button>
 </div>
 
 <div class="chat" id="chat"></div>
 
 <div class="inputBox">
-  <input id="msg" placeholder="메시지 입력">
-  <button onclick="sendMsg()">전송</button>
+  <div class="inputInner">
+    <input id="msg" placeholder="LOYD 멤버들에게 하고 싶은 말을 입력해주세요">
+    <button class="sendBtn" onclick="sendMsg()">보내기</button>
+  </div>
 </div>
 </div>
 
 <div class="settings" id="settings">
-  <h4>프로필 설정 (현재 시점 사용자)</h4>
+  <h4>프로필 설정</h4>
   이름: <input id="nameInput"><br><br>
   프사 업로드: <input type="file" id="imgInput"><br><br>
   <button onclick="saveProfile()">저장</button>
   <hr>
-  <h4>공지 변경 (관리자만)</h4>
+  <h4>공지 설정</h4>
   <input id="noticeInput">
-  <button onclick="changeNotice()">공지 설정</button>
+  <button onclick="changeNotice()">공지 변경</button>
   <hr>
-  <h4>테마</h4>
+  <h4>테마 설정</h4>
   <button onclick="setTheme('light')">화이트</button>
   <button onclick="setTheme('dark')">다크</button>
 </div>
 
 <script>
 let currentUser = localStorage.getItem('currentUser') || 'SEORIN';
-const adminUser = 'SEORIN';
 let messages = JSON.parse(localStorage.getItem('messages') || '[]');
-let users = JSON.parse(localStorage.getItem('users') || `{
- "SEORIN":{"img":"https://i.pravatar.cc/40?img=1","badge":"🩰","name":"SEORIN"},
- "HARI":{"img":"https://i.pravatar.cc/40?img=2","badge":"🥨","name":"HARI"},
- "ROSSY":{"img":"https://i.pravatar.cc/40?img=3","badge":"🔖","name":"ROSSY"},
- "DANA":{"img":"https://i.pravatar.cc/40?img=4","badge":"🌀","name":"DANA"}
-}`);
+let users = JSON.parse(localStorage.getItem('users') || '{}');
+
+if(Object.keys(users).length===0){
+ users={
+  SEORIN:{img:'https://i.pravatar.cc/40?img=1',badge:'⭐',name:'SEORIN'},
+  HARI:{img:'https://i.pravatar.cc/40?img=2',badge:'💎',name:'HARI'},
+  ROSSY:{img:'https://i.pravatar.cc/40?img=3',badge:'✔',name:'ROSSY'},
+  DANA:{img:'https://i.pravatar.cc/40?img=4',badge:'🔥',name:'DANA'}
+ };
+}
 
 function renderChat(){
  const chat=document.getElementById('chat');
@@ -83,20 +95,14 @@ function renderChat(){
   const wrap=document.createElement('div');
   const side = m.sender === currentUser ? 'right':'left';
   wrap.className='message '+side;
-
   if(side==='left'){
-    wrap.innerHTML=`
-      <div class='msgWrap'>
-        <div class='nameRow'>
-          <img src='${users[m.sender].img}'>
-          <span>${users[m.sender].name} ${users[m.sender].badge}</span>
-        </div>
+    wrap.innerHTML=`<div class='msgWrap'>
+        <div class='nameRow'><img src='${users[m.sender].img}'> ${users[m.sender].name} ${users[m.sender].badge}</div>
         <div class='bubble'>${m.text}</div>
       </div>`;
   }else{
     wrap.innerHTML=`<div class='bubble'>${m.text}</div>`;
   }
-
   chat.appendChild(wrap);
  });
 }
@@ -136,26 +142,19 @@ function saveProfile(){
   reader.readAsDataURL(file);
  }else{
   localStorage.setItem('users',JSON.stringify(users));
-  renderChat();
  }
 }
 
 function changeNotice(){
- if(currentUser !== adminUser){ alert('관리자만 변경 가능'); return; }
  const text=document.getElementById('noticeInput').value;
  document.getElementById('notice').innerText='📢 '+text;
  localStorage.setItem('notice',text);
 }
 
 function setTheme(t){
- if(t==='dark'){ document.body.classList.add('dark'); localStorage.setItem('theme','dark'); }
- else{ document.body.classList.remove('dark'); localStorage.setItem('theme','light'); }
+ if(t==='dark'){ document.body.style.background='#111'; }
+ else{ document.body.style.background='#e8e2df'; }
 }
-
-const notice = localStorage.getItem('notice');
-if(notice) document.getElementById('notice').innerText='📢 '+notice;
-const theme = localStorage.getItem('theme');
-if(theme==='dark') document.body.classList.add('dark');
 </script>
 
 </body>
