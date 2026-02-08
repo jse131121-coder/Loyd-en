@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LOYD Chat</title>
+<title>ABLE</title>
 <style>
 body{font-family:Arial;margin:0;background:#e8e2df;font-size:13px}
 .phone{max-width:420px;margin:auto;background:#f6f2f1;height:100vh;display:flex;flex-direction:column}
@@ -39,21 +39,22 @@ body{font-family:Arial;margin:0;background:#e8e2df;font-size:13px}
   <a href="#" id="linkBtn" class="circle">E</a>
 </div>
 
-<div class="notice" id="notice">📢 공지 - 필독</div>
+<div class="notice" id="notice">공지 - 필독</div>
 
 <div class="userbar">
-  <button onclick="setUser('SEORIN')">SEORIN</button>
-  <button onclick="setUser('HARI')">HARI</button>
-  <button onclick="setUser('ROSSY')">ROSSY</button>
-  <button onclick="setUser('DANA')">DANA</button>
-  <button onclick="toggleSettings()">⚙ 설정</button>
+  <button onclick="setUser('HAYOUNG')">HAYOUNG</button>
+  <button onclick="setUser('HEESOO')">HEESOO</button>
+  <button onclick="setUser('DAON')">DAON</button>
+  <button onclick="setUser('SEOHA')">SEOHA</button>
+  <button onclick="setUser('RAHEE')">RAHEE</button>
+  <button onclick="toggleSettings()">🖥</button>
 </div>
 
 <div class="chat" id="chat"></div>
 
 <div class="inputBox">
   <div class="inputInner">
-    <input id="msg" placeholder="LOYD 멤버들에게 하고 싶은 말을 입력해주세요">
+    <input id="msg" placeholder="ABLE 멤버들에게 하고 싶은 말을 입력해주세요">
     <button class="sendBtn" onclick="sendMsg()">보내기</button>
   </div>
 </div>
@@ -75,16 +76,17 @@ body{font-family:Arial;margin:0;background:#e8e2df;font-size:13px}
 </div>
 
 <script>
-let currentUser = localStorage.getItem('currentUser') || 'SEORIN';
+let currentUser = localStorage.getItem('currentUser') || 'HAYOUNG';
 let messages = JSON.parse(localStorage.getItem('messages') || '[]');
 let users = JSON.parse(localStorage.getItem('users') || '{}');
 
 if(Object.keys(users).length===0){
  users={
-  SEORIN:{img:'https://i.pravatar.cc/40?img=1',badge:'⭐',name:'SEORIN'},
-  HARI:{img:'https://i.pravatar.cc/40?img=2',badge:'💎',name:'HARI'},
-  ROSSY:{img:'https://i.pravatar.cc/40?img=3',badge:'✔',name:'ROSSY'},
-  DANA:{img:'https://i.pravatar.cc/40?img=4',badge:'🔥',name:'DANA'}
+  HAYOUNG:{img:'https://i.pravatar.cc/40?img=1',badge:'🐱',name:'HAYOUNG'},
+  HEESOO:{img:'https://i.pravatar.cc/40?img=2',badge:'🐶',name:'HEESOO'},
+  DAON:{img:'https://i.pravatar.cc/40?img=3',badge:'🐰',name:'DAON'},
+  SEOHA:{img:'https://i.pravatar.cc/40?img=4',badge:'🐻',name:'SEOHA'}
+  RAHEE:{img:'https://i.pravatar.cc/40?img=5',badge:'🐹',name:'RAHEE'}
  };
 }
 
@@ -147,7 +149,7 @@ function saveProfile(){
 
 function changeNotice(){
  const text=document.getElementById('noticeInput').value;
- document.getElementById('notice').innerText='📢 '+text;
+ document.getElementById('notice').innerText=text;
  localStorage.setItem('notice',text);
 }
 
